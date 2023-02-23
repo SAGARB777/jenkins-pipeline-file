@@ -1,0 +1,56 @@
+pipeline {
+   agent {
+     node {
+       label 'slave01'
+       }
+}
+   
+   tools {
+   maven 'maven3'
+}
+ 
+ options {
+      buildDiscarder logRotator(
+                   daysTokeepstr: '15'
+                   numTokeepstr: '10'
+          )
+}
+
+environment {
+      App_NAME = "DCUBE_APP",
+      APP_ENV = "DEV"
+}
+
+stages {
+     stage ('cleanup workspace') {
+            steps {
+                 cleanWs()
+                   sh """
+                   echo "cleaned uo workspace for ${APP_NAME}"""
+  }
+}
+stage ('code checkout') {
+     steps {
+         checkout ([
+            $class: 'GitSCM',
+            branches: [name: '*/master]],
+            userremoteconfigs: [[url:
+            https://github.com/spring-projects/spring-petclinic.git']]
+                        ])
+                }
+              }
+                stage('code build') {
+                    steps {
+                    sh 'mvn install-Dmaven.test.skip=true'
+                    }
+               }
+                    stage('printing All Global Variables') {
+                      steps {
+                       sh """
+                       env
+                       """
+                     }
+             }
+        }
+  }
+                    
